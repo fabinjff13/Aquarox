@@ -1,404 +1,749 @@
-import React, { useState, useEffect } from 'react';
-import { Home, Radio, AlertTriangle, Globe, Camera, Battery, Droplets, Thermometer, Wind, Waves, Fish, X, ChevronLeft, Play, Trophy, Eye, Map, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { Waves, Satellite, AlertTriangle, Glasses, Fish, ThermometerSun, Wind, Droplets, Activity, MapPin, ChevronRight, Home, LifeBuoy, Play, X, Eye } from 'lucide-react';
 
 const AquaroxApp = () => {
-  const [currentPage, setCurrentPage] = useState('splash');
+  const [currentPage, setCurrentPage] = useState('home');
   const [selectedFish, setSelectedFish] = useState(null);
-  const [score, setScore] = useState(0);
-  const [gameActive, setGameActive] = useState(false);
-  const [foundSpecies, setFoundSpecies] = useState([]);
-  const [missionTimer, setMissionTimer] = useState(180);
-  
+  const [rescueMission, setRescueMission] = useState(null);
+
   const nasaData = {
-    seaTemp: 28.5,
-    chlorophyll: 0.35,
-    windSpeed: 12.3,
-    waveHeight: 1.8
-  };
-  
-  const [robotStatus, setRobotStatus] = useState({
-    battery: 87,
-    depth: 120,
-    oxygen: 94,
-    temp: 24.8
-  });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRobotStatus(prev => ({
-        ...prev,
-        battery: Math.max(85, prev.battery - 0.1),
-        depth: Math.max(100, Math.min(140, prev.depth + (Math.random() - 0.5) * 3))
-      }));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (gameActive && missionTimer > 0) {
-      const timer = setInterval(() => {
-        setMissionTimer(prev => Math.max(0, prev - 1));
-      }, 1000);
-      return () => clearInterval(timer);
+    seaSurfaceTemp: {
+      current: 28.5,
+      average: 26.2,
+      trend: 'rising',
+      source: 'MODIS/VIIRS',
+      lastUpdate: '2025-10-03',
+      locations: [
+        { name: 'Great Barrier Reef', temp: 29.8, status: 'critical' },
+        { name: 'Caribbean Sea', temp: 28.2, status: 'warning' },
+        { name: 'Mediterranean', temp: 27.5, status: 'normal' },
+        { name: 'Bay of Bengal', temp: 30.1, status: 'critical' }
+      ]
+    },
+    oceanColor: {
+      chlorophyll: 0.45,
+      status: 'healthy',
+      source: 'PACE',
+      algaeBloom: false,
+      lastUpdate: '2025-10-03'
+    },
+    storms: {
+      active: 2,
+      monitored: 5,
+      source: 'CYGNSS',
+      current: [
+        { name: 'Tropical Storm Beta', category: 2, location: 'Atlantic', risk: 'medium' },
+        { name: 'Cyclone Gamma', category: 3, location: 'Indian Ocean', risk: 'high' }
+      ]
+    },
+    seaLevel: {
+      current: 3.4,
+      rate: '+3.4mm/year',
+      source: 'SWOT/Jason',
+      projections: '0.3-2.5m by 2100'
+    },
+    pollution: {
+      detected: true,
+      type: 'Oil spill',
+      location: 'Gulf of Mexico',
+      size: '12 km²',
+      source: 'Landsat/Sentinel'
     }
-  }, [gameActive, missionTimer]);
+  };
 
   const marineLife = [
-    { id: 1, name: 'Clownfish', x: 25, y: 50, scientificName: 'Amphiprioninae', habitat: 'Coral reefs', depth: '1-12m', status: 'Stable', points: 10 },
-    { id: 2, name: 'Sea Turtle', x: 70, y: 40, scientificName: 'Chelonioidea', habitat: 'Open ocean', depth: '0-300m', status: 'Endangered', points: 25 },
-    { id: 3, name: 'Bleached Coral', x: 45, y: 75, scientificName: 'Scleractinia', habitat: 'Reef structures', depth: '0-50m', status: 'Critical', points: 50 },
-    { id: 4, name: 'Dolphin', x: 80, y: 25, scientificName: 'Delphinidae', habitat: 'Coastal waters', depth: '0-200m', status: 'Stable', points: 30 },
-    { id: 5, name: 'Jellyfish', x: 15, y: 30, scientificName: 'Medusozoa', habitat: 'Open ocean', depth: '0-700m', status: 'Blooming', points: 15 },
-    { id: 6, name: 'Seahorse', x: 55, y: 60, scientificName: 'Hippocampus', habitat: 'Seagrass beds', depth: '1-70m', status: 'Vulnerable', points: 20 }
+    {
+      id: 1,
+      name: 'Clownfish',
+      scientificName: 'Amphiprioninae',
+      status: 'Stable',
+      population: 'Common',
+      depth: '1-12 meters',
+      temperature: '24-28°C',
+      diet: 'Omnivore',
+      lifespan: '6-10 years',
+      threats: 'Habitat loss, coral bleaching',
+      funFact: 'All clownfish are born male and can change to female',
+      emoji: '🐠',
+      color: 'orange'
+    },
+    {
+      id: 2,
+      name: 'Sea Turtle',
+      scientificName: 'Chelonioidea',
+      status: 'Endangered',
+      population: 'Declining',
+      depth: '0-1,200 meters',
+      temperature: '20-30°C',
+      diet: 'Herbivore/Omnivore',
+      lifespan: '50-100 years',
+      threats: 'Plastic pollution, fishing nets, climate change',
+      funFact: 'They navigate using Earth\'s magnetic field',
+      emoji: '🐢',
+      color: 'green'
+    },
+    {
+      id: 3,
+      name: 'Coral',
+      scientificName: 'Anthozoa',
+      status: 'Critical',
+      population: 'Rapidly declining',
+      depth: '0-150 meters',
+      temperature: '23-29°C (sensitive)',
+      diet: 'Photosynthesis + plankton',
+      lifespan: 'Hundreds to thousands of years',
+      threats: 'Ocean warming, acidification, pollution',
+      funFact: 'Corals are animals, not plants!',
+      emoji: '🪸',
+      color: 'pink'
+    },
+    {
+      id: 4,
+      name: 'Dolphin',
+      scientificName: 'Delphinidae',
+      status: 'Stable',
+      population: 'Common',
+      depth: '0-260 meters',
+      temperature: '10-32°C',
+      diet: 'Carnivore (fish, squid)',
+      lifespan: '20-45 years',
+      threats: 'Bycatch, pollution, noise pollution',
+      funFact: 'Dolphins have names for each other',
+      emoji: '🐬',
+      color: 'blue'
+    },
+    {
+      id: 5,
+      name: 'Jellyfish',
+      scientificName: 'Medusozoa',
+      status: 'Increasing',
+      population: 'Growing',
+      depth: '0-700 meters',
+      temperature: 'Varies by species',
+      diet: 'Carnivore (plankton, small fish)',
+      lifespan: '1-3 years',
+      threats: 'Predators, but thriving due to warming',
+      funFact: 'Jellyfish have existed for 500 million years',
+      emoji: '🪼',
+      color: 'purple'
+    },
+    {
+      id: 6,
+      name: 'Whale Shark',
+      scientificName: 'Rhincodon typus',
+      status: 'Endangered',
+      population: 'Vulnerable',
+      depth: '0-1,928 meters',
+      temperature: '21-30°C',
+      diet: 'Filter feeder (plankton)',
+      lifespan: '70-100 years',
+      threats: 'Fishing, ship strikes, climate change',
+      funFact: 'Largest fish in the ocean, up to 18 meters long',
+      emoji: '🦈',
+      color: 'gray'
+    }
   ];
 
-  if (currentPage === 'splash') {
-    return (
-      <div className="w-full h-screen max-w-md mx-auto bg-gradient-to-b from-blue-950 via-blue-800 to-cyan-600 flex flex-col items-center justify-center p-8">
-        <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-2xl">
-          <Radio className="text-blue-600" size={48} />
+  const rescueMissions = [
+    {
+      id: 1,
+      title: 'Coral Bleaching Emergency',
+      location: 'Great Barrier Reef',
+      priority: 'Critical',
+      status: 'Active',
+      nasaData: 'SST: 29.8°C (3.6°C above normal)',
+      robotStatus: 'Deployed',
+      findings: 'Severe bleaching detected in 45% of surveyed area',
+      action: 'Deploying cooling measures, relocating heat-sensitive species'
+    },
+    {
+      id: 2,
+      title: 'Oil Spill Detection',
+      location: 'Gulf of Mexico',
+      priority: 'High',
+      status: 'Responding',
+      nasaData: 'Landsat detected 12km² anomaly',
+      robotStatus: 'En route',
+      findings: 'Oil slick confirmed, source identified',
+      action: 'Containment barriers deployed, tracking spread'
+    },
+    {
+      id: 3,
+      title: 'Hurricane Impact Assessment',
+      location: 'Caribbean Sea',
+      priority: 'Medium',
+      status: 'Planning',
+      nasaData: 'CYGNSS: Category 2 storm passed 48h ago',
+      robotStatus: 'Ready',
+      findings: 'Awaiting deployment post-storm',
+      action: 'Will assess reef damage and sediment displacement'
+    }
+  ];
+
+  const renderHome = () => (
+    <div className="min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-cyan-900 text-white">
+      <div className="relative h-96 flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-blue-900"></div>
+        <div className="relative z-10 text-center px-4">
+          <Waves className="w-20 h-20 mx-auto mb-4 animate-pulse" />
+          <h1 className="text-5xl font-bold mb-4">Aquarox</h1>
+          <p className="text-xl mb-2">From Space to Sea</p>
+          <p className="text-sm opacity-80">Bridging NASA Data with Underwater Exploration</p>
         </div>
-        
-        <h1 className="text-5xl font-bold text-white mb-3">Aquarox</h1>
-        <p className="text-xl text-cyan-200 mb-2">Ocean Explorer</p>
-        <p className="text-sm text-cyan-300 mb-8 text-center">Bridging NASA Space Data with Underwater Exploration</p>
-        
-        <div className="space-y-3 mb-12">
-          <div className="flex items-center justify-center gap-2 text-white text-sm">
-            <Globe size={16} />
-            <span>NASA Satellite Integration</span>
-          </div>
-          <div className="flex items-center justify-center gap-2 text-white text-sm">
-            <Radio size={16} />
-            <span>Real-time Robot Data</span>
-          </div>
-          <div className="flex items-center justify-center gap-2 text-white text-sm">
-            <Eye size={16} />
-            <span>VR Deep Dive Experience</span>
-          </div>
-        </div>
-        
-        <button 
-          onClick={() => setCurrentPage('home')}
-          className="bg-white text-blue-600 px-12 py-4 rounded-full font-bold text-lg shadow-lg"
-        >
-          Start Exploration
-        </button>
       </div>
-    );
-  }
 
-  if (currentPage === 'home') {
-    return (
-      <div className="w-full h-screen max-w-md mx-auto flex flex-col bg-gradient-to-b from-blue-900 to-blue-700">
-        <div className="p-6 text-white">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                <Radio className="text-blue-600" size={24} />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold">Aquarox</h1>
-                <p className="text-xs opacity-80">Mission Control</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 bg-blue-800 px-3 py-2 rounded-full">
-              <Trophy size={18} className="text-yellow-400" />
-              <span className="font-bold">{score}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 mb-4">
-            <button 
-              onClick={() => setCurrentPage('missions')}
-              className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl p-4 text-left shadow-lg"
-            >
-              <Map className="mb-2" size={28} />
-              <h3 className="font-bold">Missions</h3>
-              <p className="text-xs opacity-90">Start exploring</p>
-            </button>
-            
-            <button 
-              onClick={() => setCurrentPage('vr')}
-              className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-4 text-left shadow-lg"
-            >
-              <Camera className="mb-2" size={28} />
-              <h3 className="font-bold">VR Dive</h3>
-              <p className="text-xs opacity-90">Explore ocean</p>
-            </button>
-            
-            <button 
-              onClick={() => setCurrentPage('game')}
-              className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-4 text-left shadow-lg"
-            >
-              <Play className="mb-2" size={28} />
-              <h3 className="font-bold">Game</h3>
-              <p className="text-xs opacity-90">Find species</p>
-            </button>
-            
-            <button 
-              onClick={() => setCurrentPage('rescue')}
-              className="bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl p-4 text-left shadow-lg"
-            >
-              <AlertTriangle className="mb-2" size={28} />
-              <h3 className="font-bold">Alerts</h3>
-              <p className="text-xs opacity-90">3 Active</p>
-            </button>
-          </div>
-
-          <div className="bg-blue-800 bg-opacity-50 rounded-2xl p-4 mb-4">
-            <h3 className="font-semibold mb-3 flex items-center gap-2">
-              <Activity size={18} />
-              Live Robot Status
-            </h3>
-            <div className="grid grid-cols-3 gap-3 text-xs">
-              <div className="text-center">
-                <Battery className="mx-auto mb-1" size={16} />
-                <p className="opacity-80">Battery</p>
-                <p className="font-bold">{robotStatus.battery.toFixed(0)}%</p>
-              </div>
-              <div className="text-center">
-                <Droplets className="mx-auto mb-1" size={16} />
-                <p className="opacity-80">Depth</p>
-                <p className="font-bold">{robotStatus.depth.toFixed(0)}m</p>
-              </div>
-              <div className="text-center">
-                <Thermometer className="mx-auto mb-1" size={16} />
-                <p className="opacity-80">Temp</p>
-                <p className="font-bold">{robotStatus.temp}°C</p>
-              </div>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => setCurrentPage('data')}
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl p-4 flex items-center justify-between shadow-lg"
+      <div className="px-6 py-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <button
+            onClick={() => setCurrentPage('nasa-data')}
+            className="bg-blue-800 hover:bg-blue-700 p-6 rounded-xl flex items-center justify-between transition group"
           >
-            <div className="flex items-center gap-3">
-              <Globe size={24} />
+            <div className="flex items-center">
+              <Satellite className="w-8 h-8 mr-4" />
               <div className="text-left">
-                <p className="font-bold">NASA Data Stream</p>
-                <p className="text-xs opacity-90">6 satellites connected</p>
+                <h3 className="font-bold text-lg">NASA Data</h3>
+                <p className="text-sm opacity-80">Live ocean monitoring</p>
               </div>
             </div>
-            <ChevronLeft className="rotate-180" size={20} />
+            <ChevronRight className="group-hover:translate-x-1 transition" />
+          </button>
+
+          <button
+            onClick={() => setCurrentPage('rescue')}
+            className="bg-red-800 hover:bg-red-700 p-6 rounded-xl flex items-center justify-between transition group"
+          >
+            <div className="flex items-center">
+              <LifeBuoy className="w-8 h-8 mr-4" />
+              <div className="text-left">
+                <h3 className="font-bold text-lg">Rescue Missions</h3>
+                <p className="text-sm opacity-80">Active operations</p>
+              </div>
+            </div>
+            <ChevronRight className="group-hover:translate-x-1 transition" />
+          </button>
+
+          <button
+            onClick={() => setCurrentPage('vr')}
+            className="bg-purple-800 hover:bg-purple-700 p-6 rounded-xl flex items-center justify-between transition group"
+          >
+            <div className="flex items-center">
+              <Glasses className="w-8 h-8 mr-4" />
+              <div className="text-left">
+                <h3 className="font-bold text-lg">VR Exploration</h3>
+                <p className="text-sm opacity-80">Immersive diving</p>
+              </div>
+            </div>
+            <ChevronRight className="group-hover:translate-x-1 transition" />
+          </button>
+
+          <button
+            onClick={() => setCurrentPage('marine-life')}
+            className="bg-green-800 hover:bg-green-700 p-6 rounded-xl flex items-center justify-between transition group"
+          >
+            <div className="flex items-center">
+              <Fish className="w-8 h-8 mr-4" />
+              <div className="text-left">
+                <h3 className="font-bold text-lg">Marine Life</h3>
+                <p className="text-sm opacity-80">Species database</p>
+              </div>
+            </div>
+            <ChevronRight className="group-hover:translate-x-1 transition" />
           </button>
         </div>
 
-        <div className="mt-auto bg-blue-950 text-white py-3 px-6 grid grid-cols-4 gap-2">
-          <button className="flex flex-col items-center gap-1 text-blue-300">
-            <Home size={24} />
-            <span className="text-xs">Home</span>
-          </button>
-          <button onClick={() => setCurrentPage('missions')} className="flex flex-col items-center gap-1">
-            <Map size={24} />
-            <span className="text-xs">Missions</span>
-          </button>
-          <button onClick={() => setCurrentPage('data')} className="flex flex-col items-center gap-1">
-            <Globe size={24} />
-            <span className="text-xs">Data</span>
-          </button>
-          <button onClick={() => setCurrentPage('game')} className="flex flex-col items-center gap-1">
-            <Play size={24} />
-            <span className="text-xs">Game</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (currentPage === 'game') {
-    return (
-      <div className="w-full h-screen max-w-md mx-auto flex flex-col bg-gradient-to-b from-emerald-900 to-teal-800">
-        <div className="p-4 flex items-center justify-between text-white">
-          <button onClick={() => setCurrentPage('home')}>
-            <ChevronLeft size={24} />
-          </button>
-          <h2 className="text-xl font-bold">Species Discovery</h2>
-          <div className="flex items-center gap-2 bg-emerald-950 px-3 py-1 rounded-full">
-            <Trophy size={18} className="text-yellow-400" />
-            <span className="font-bold">{score}</span>
-          </div>
-        </div>
-
-        {!gameActive ? (
-          <div className="flex-1 flex flex-col items-center justify-center p-6 text-white">
-            <div className="bg-emerald-800 bg-opacity-50 backdrop-blur rounded-2xl p-8 text-center max-w-sm">
-              <Fish className="mx-auto mb-4 text-cyan-300" size={64} />
-              <h3 className="text-2xl font-bold mb-4">Marine Life Hunt</h3>
-              <p className="mb-6 opacity-90">
-                Use Aquarox to discover marine species. NASA data helps locate them.
-              </p>
-              <div className="bg-emerald-900 rounded-xl p-4 mb-6 text-left text-sm space-y-2">
-                <p><strong>Common:</strong> 10-15 pts</p>
-                <p><strong>Endangered:</strong> 25-30 pts</p>
-                <p><strong>Critical:</strong> 50 pts</p>
-              </div>
-              <button 
-                onClick={() => {
-                  setGameActive(true);
-                  setFoundSpecies([]);
-                  setMissionTimer(180);
-                }}
-                className="w-full bg-white text-emerald-800 font-bold py-4 rounded-xl flex items-center justify-center gap-2"
-              >
-                <Play size={24} />
-                Start Mission
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex-1 relative">
-            <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-20">
-              <div className="bg-black bg-opacity-70 text-white px-4 py-2 rounded-full font-bold">
-                {Math.floor(missionTimer / 60)}:{(missionTimer % 60).toString().padStart(2, '0')}
-              </div>
-              <div className="bg-black bg-opacity-70 text-white px-4 py-2 rounded-full font-bold">
-                {foundSpecies.length}/6
-              </div>
-            </div>
-
-            <div className="absolute inset-0 bg-gradient-to-b from-cyan-500 via-blue-700 to-blue-950">
-              <svg viewBox="0 0 100 100" className="w-full h-full">
-                <rect x="48" y="0" width="4" height="100" fill="white" opacity="0.3"/>
-                
-                {marineLife.map(species => {
-                  const found = foundSpecies.includes(species.id);
-                  return (
-                    <g 
-                      key={species.id}
-                      transform={`translate(${species.x}, ${species.y})`}
-                      onClick={() => {
-                        if (!found) {
-                          setFoundSpecies([...foundSpecies, species.id]);
-                          setScore(score + species.points);
-                          setSelectedFish(species);
-                        }
-                      }}
-                      className={`${found ? 'opacity-30' : 'cursor-pointer'}`}
-                    >
-                      <circle cx="0" cy="0" r="8" fill={found ? "#4ade80" : "rgba(59, 130, 246, 0.4)"} />
-                      <ellipse cx="0" cy="0" rx="3" ry="2" fill="#fb923c"/>
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-
-            <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-80 text-white p-4 rounded-xl text-xs">
-              <div className="flex items-center gap-2 mb-2">
-                <Globe size={16} className="text-cyan-400" />
-                <span className="font-semibold">NASA Data:</span>
-              </div>
-              <p>Temp: {nasaData.seaTemp}°C (MODIS) | Chlorophyll: {nasaData.chlorophyll} mg/m³</p>
-            </div>
-          </div>
-        )}
-
-        {selectedFish && (
-          <div className="absolute inset-0 bg-black bg-opacity-90 flex items-center justify-center p-6 z-50">
-            <div className="bg-gradient-to-br from-emerald-700 to-teal-800 rounded-2xl p-6 max-w-sm w-full text-white relative">
-              <button onClick={() => setSelectedFish(null)} className="absolute top-4 right-4">
-                <X size={24} />
-              </button>
-              
-              <div className="text-center mb-4">
-                <div className="w-16 h-16 bg-green-400 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Trophy className="text-green-900" size={32} />
-                </div>
-                <h3 className="text-2xl font-bold">+{selectedFish.points} Points</h3>
-                <p className="text-lg font-semibold">{selectedFish.name}</p>
-                <p className="text-sm italic opacity-80">{selectedFish.scientificName}</p>
-              </div>
-              
-              <div className="space-y-2 text-sm bg-emerald-900 bg-opacity-50 rounded-xl p-4 mb-4">
-                <div className="flex justify-between">
-                  <span>Status:</span>
-                  <span className="font-semibold">{selectedFish.status}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Habitat:</span>
-                  <span className="font-semibold">{selectedFish.habitat}</span>
-                </div>
-              </div>
-
-              <button onClick={() => setSelectedFish(null)} className="w-full bg-white text-emerald-800 font-bold py-3 rounded-xl">
-                Continue
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  if (currentPage === 'data') {
-    return (
-      <div className="w-full h-screen max-w-md mx-auto flex flex-col bg-gradient-to-b from-slate-900 to-slate-800">
-        <div className="p-4 flex items-center text-white">
-          <button onClick={() => setCurrentPage('home')}>
-            <ChevronLeft size={24} />
-          </button>
-          <h2 className="text-xl font-bold ml-3">NASA + Robot Data</h2>
-        </div>
-
-        <div className="flex-1 p-4 space-y-4 overflow-auto">
-          <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-4 text-white">
-            <h3 className="font-bold mb-3">NASA Satellite Data</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Sea Temp (MODIS)</span>
-                <span className="font-bold">{nasaData.seaTemp}°C</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Chlorophyll (PACE)</span>
-                <span className="font-bold">{nasaData.chlorophyll} mg/m³</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Wind (SMAP)</span>
-                <span className="font-bold">{nasaData.windSpeed} km/h</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Waves (SWOT)</span>
-                <span className="font-bold">{nasaData.waveHeight}m</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-4 text-white">
-            <h3 className="font-bold mb-3">Aquarox Robot</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Battery</span>
-                <span className="font-bold">{robotStatus.battery.toFixed(1)}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Depth</span>
-                <span className="font-bold">{robotStatus.depth.toFixed(1)}m</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Temperature</span>
-                <span className="font-bold">{robotStatus.temp}°C</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Oxygen</span>
-                <span className="font-bold">{robotStatus.oxygen}%</span>
-              </div>
-            </div>
-          </div>
+        <div className="bg-blue-800/50 rounded-xl p-6">
+          <h2 className="text-2xl font-bold mb-4">About Aquarox</h2>
+          <p className="mb-3">
+            Aquarox is an innovative underwater robot that combines NASA satellite data with local ocean exploration to create immersive VR experiences accessible to everyone.
+          </p>
+          <p className="text-sm opacity-80">
+            Whether you are a scientist, student, or someone who cannot physically dive, Aquarox brings the ocean wonders to you while monitoring critical environmental changes.
+          </p>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
-  return (
-    <div className="w-full h-screen max-w-md mx-auto bg-blue-900 flex items-center justify-center text-white">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-4">Page Under Development</h2>
-        <button onClick={() => setCurrentPage('home')} className="bg-white text-blue-900 px-6 py-2 rounded-lg font-bold">
+  const renderNASAData = () => (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-blue-900 text-white pb-12">
+      <div className="bg-blue-800 p-6 sticky top-0 z-20">
+        <button onClick={() => setCurrentPage('home')} className="flex items-center text-white hover:text-blue-200">
+          <Home className="w-5 h-5 mr-2" />
           Back to Home
         </button>
+        <h1 className="text-3xl font-bold mt-4">NASA Data Monitoring</h1>
+        <p className="text-sm opacity-80">Real-time ocean observations from space</p>
       </div>
+
+      <div className="px-6 py-8 max-w-6xl mx-auto">
+        <div className="bg-slate-800 rounded-xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <ThermometerSun className="w-8 h-8 mr-3 text-red-400" />
+              <div>
+                <h2 className="text-2xl font-bold">Sea Surface Temperature</h2>
+                <p className="text-sm opacity-70">Source: {nasaData.seaSurfaceTemp.source}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-4xl font-bold text-red-400">{nasaData.seaSurfaceTemp.current}°C</div>
+              <div className="text-sm">Global Average: {nasaData.seaSurfaceTemp.average}°C</div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+            {nasaData.seaSurfaceTemp.locations.map((loc, idx) => (
+              <div key={idx} className={`p-4 rounded-lg ${
+                loc.status === 'critical' ? 'bg-red-900/50' : 
+                loc.status === 'warning' ? 'bg-yellow-900/50' : 'bg-green-900/50'
+              }`}>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="font-bold">{loc.name}</p>
+                    <p className="text-2xl">{loc.temp}°C</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                    loc.status === 'critical' ? 'bg-red-600' : 
+                    loc.status === 'warning' ? 'bg-yellow-600' : 'bg-green-600'
+                  }`}>
+                    {loc.status.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-slate-800 rounded-xl p-6 mb-6">
+          <div className="flex items-center mb-4">
+            <Droplets className="w-8 h-8 mr-3 text-green-400" />
+            <div>
+              <h2 className="text-2xl font-bold">Ocean Color and Chlorophyll</h2>
+              <p className="text-sm opacity-70">Source: {nasaData.oceanColor.source} (PACE Mission)</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-green-900/30 p-4 rounded-lg">
+              <p className="text-sm opacity-70">Chlorophyll Concentration</p>
+              <p className="text-3xl font-bold text-green-400">{nasaData.oceanColor.chlorophyll} mg/m³</p>
+            </div>
+            <div className="bg-blue-900/30 p-4 rounded-lg">
+              <p className="text-sm opacity-70">Water Quality Status</p>
+              <p className="text-3xl font-bold text-blue-400">{nasaData.oceanColor.status}</p>
+            </div>
+          </div>
+          <p className="mt-4 text-sm">
+            {nasaData.oceanColor.algaeBloom ? 
+              '⚠️ Algae bloom detected in monitored areas' : 
+              '✅ No harmful algae blooms detected'}
+          </p>
+        </div>
+
+        <div className="bg-slate-800 rounded-xl p-6 mb-6">
+          <div className="flex items-center mb-4">
+            <Wind className="w-8 h-8 mr-3 text-yellow-400" />
+            <div>
+              <h2 className="text-2xl font-bold">Storm Tracking</h2>
+              <p className="text-sm opacity-70">Source: {nasaData.storms.source}</p>
+            </div>
+          </div>
+          <div className="mb-4">
+            <p className="text-lg">Active Storms: <span className="font-bold text-yellow-400">{nasaData.storms.active}</span></p>
+            <p className="text-lg">Monitored Systems: <span className="font-bold">{nasaData.storms.monitored}</span></p>
+          </div>
+          {nasaData.storms.current.map((storm, idx) => (
+            <div key={idx} className={`p-4 rounded-lg mb-3 ${
+              storm.risk === 'high' ? 'bg-red-900/50' : 'bg-yellow-900/50'
+            }`}>
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-bold text-lg">{storm.name}</p>
+                  <p className="text-sm">Category {storm.category} • {storm.location}</p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  storm.risk === 'high' ? 'bg-red-600' : 'bg-yellow-600'
+                }`}>
+                  {storm.risk.toUpperCase()} RISK
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-slate-800 rounded-xl p-6 mb-6">
+          <div className="flex items-center mb-4">
+            <Activity className="w-8 h-8 mr-3 text-cyan-400" />
+            <div>
+              <h2 className="text-2xl font-bold">Sea Level Rise</h2>
+              <p className="text-sm opacity-70">Source: {nasaData.seaLevel.source}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-cyan-900/30 p-4 rounded-lg">
+              <p className="text-sm opacity-70">Current Rise (since 1993)</p>
+              <p className="text-3xl font-bold text-cyan-400">{nasaData.seaLevel.current} inches</p>
+            </div>
+            <div className="bg-cyan-900/30 p-4 rounded-lg">
+              <p className="text-sm opacity-70">Rate of Change</p>
+              <p className="text-3xl font-bold text-cyan-400">{nasaData.seaLevel.rate}</p>
+            </div>
+            <div className="bg-cyan-900/30 p-4 rounded-lg">
+              <p className="text-sm opacity-70">2100 Projection</p>
+              <p className="text-2xl font-bold text-cyan-400">{nasaData.seaLevel.projections}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-800 rounded-xl p-6">
+          <div className="flex items-center mb-4">
+            <AlertTriangle className="w-8 h-8 mr-3 text-orange-400" />
+            <div>
+              <h2 className="text-2xl font-bold">Pollution Detection</h2>
+              <p className="text-sm opacity-70">Source: {nasaData.pollution.source}</p>
+            </div>
+          </div>
+          {nasaData.pollution.detected ? (
+            <div className="bg-orange-900/50 p-4 rounded-lg">
+              <p className="font-bold text-lg text-orange-400 mb-2">⚠️ POLLUTION ALERT</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm opacity-70">Type</p>
+                  <p className="font-bold">{nasaData.pollution.type}</p>
+                </div>
+                <div>
+                  <p className="text-sm opacity-70">Location</p>
+                  <p className="font-bold">{nasaData.pollution.location}</p>
+                </div>
+                <div>
+                  <p className="text-sm opacity-70">Affected Area</p>
+                  <p className="font-bold">{nasaData.pollution.size}</p>
+                </div>
+                <div>
+                  <p className="text-sm opacity-70">Status</p>
+                  <p className="font-bold text-orange-400">Under Monitoring</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-green-400">✅ No major pollution events detected</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderRescueMissions = () => (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-red-900 text-white pb-12">
+      <div className="bg-red-800 p-6 sticky top-0 z-20">
+        <button onClick={() => setCurrentPage('home')} className="flex items-center text-white hover:text-red-200">
+          <Home className="w-5 h-5 mr-2" />
+          Back to Home
+        </button>
+        <h1 className="text-3xl font-bold mt-4">Active Rescue Missions</h1>
+        <p className="text-sm opacity-80">Aquarox deployed for environmental emergencies</p>
+      </div>
+
+      <div className="px-6 py-8 max-w-4xl mx-auto">
+        {rescueMissions.map((mission) => (
+          <div key={mission.id} className="bg-slate-800 rounded-xl p-6 mb-6 hover:bg-slate-700 transition cursor-pointer"
+               onClick={() => setRescueMission(mission)}>
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start">
+                <LifeBuoy className={`w-8 h-8 mr-3 mt-1 ${
+                  mission.priority === 'Critical' ? 'text-red-400' : 
+                  mission.priority === 'High' ? 'text-orange-400' : 'text-yellow-400'
+                }`} />
+                <div>
+                  <h2 className="text-2xl font-bold">{mission.title}</h2>
+                  <p className="text-sm opacity-70 flex items-center mt-1">
+                    <MapPin className="w-4 h-4 mr-1" />
+                    {mission.location}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold text-center ${
+                  mission.priority === 'Critical' ? 'bg-red-600' : 
+                  mission.priority === 'High' ? 'bg-orange-600' : 'bg-yellow-600'
+                }`}>
+                  {mission.priority}
+                </span>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold text-center ${
+                  mission.status === 'Active' ? 'bg-green-600' : 
+                  mission.status === 'Responding' ? 'bg-blue-600' : 'bg-gray-600'
+                }`}>
+                  {mission.status}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="bg-blue-900/30 p-4 rounded-lg">
+                <p className="text-sm opacity-70 mb-1">NASA Data</p>
+                <p className="font-bold">{mission.nasaData}</p>
+              </div>
+              <div className="bg-green-900/30 p-4 rounded-lg">
+                <p className="text-sm opacity-70 mb-1">Robot Status</p>
+                <p className="font-bold">{mission.robotStatus}</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-900/50 p-4 rounded-lg mb-3">
+              <p className="text-sm opacity-70 mb-1">Findings</p>
+              <p>{mission.findings}</p>
+            </div>
+
+            <div className="bg-slate-900/50 p-4 rounded-lg">
+              <p className="text-sm opacity-70 mb-1">Action Taken</p>
+              <p>{mission.action}</p>
+            </div>
+
+            <button className="mt-4 w-full bg-blue-600 hover:bg-blue-500 py-2 rounded-lg font-bold transition">
+              View Mission Details
+            </button>
+          </div>
+        ))}
+
+        {rescueMission && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setRescueMission(null)}>
+            <div className="bg-slate-800 rounded-xl p-6 max-w-2xl w-full" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-start mb-4">
+                <h2 className="text-2xl font-bold">{rescueMission.title}</h2>
+                <button onClick={() => setRescueMission(null)} className="text-white hover:text-red-400">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <p className="mb-4">Detailed mission information and live tracking would appear here in the full application.</p>
+              <div className="bg-blue-900/30 p-4 rounded-lg">
+                <p className="text-sm opacity-70 mb-2">Live Feed Status</p>
+                <p className="text-green-400 font-bold">🟢 Connected to Aquarox Robot</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderVRExploration = () => (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-purple-900 text-white pb-12">
+      <div className="bg-purple-800 p-6 sticky top-0 z-20">
+        <button onClick={() => setCurrentPage('home')} className="flex items-center text-white hover:text-purple-200">
+          <Home className="w-5 h-5 mr-2" />
+          Back to Home
+        </button>
+        <h1 className="text-3xl font-bold mt-4">VR Exploration</h1>
+        <p className="text-sm opacity-80">Immersive underwater experiences for everyone</p>
+      </div>
+
+      <div className="px-6 py-8 max-w-4xl mx-auto">
+        <div className="bg-slate-800 rounded-xl p-6 mb-6">
+          <div className="flex items-center mb-4">
+            <Glasses className="w-10 h-10 mr-4 text-purple-400" />
+            <div>
+              <h2 className="text-2xl font-bold">Start Your Dive</h2>
+              <p className="text-sm opacity-70">Choose your exploration experience</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-gradient-to-br from-blue-600 to-cyan-600 p-6 rounded-xl cursor-pointer hover:scale-105 transition">
+              <h3 className="text-xl font-bold mb-2">🌊 Live Dive</h3>
+              <p className="text-sm mb-4">Connect to Aquarox in real-time and control the robot underwater</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs bg-white/20 px-2 py-1 rounded">Active Robot Available</span>
+                <Play className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-600 to-pink-600 p-6 rounded-xl cursor-pointer hover:scale-105 transition">
+              <h3 className="text-xl font-bold mb-2">📹 Recorded Missions</h3>
+              <p className="text-sm mb-4">Explore previous underwater expeditions</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs bg-white/20 px-2 py-1 rounded">24 Missions Available</span>
+                <Play className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-green-600 to-teal-600 p-6 rounded-xl cursor-pointer hover:scale-105 transition">
+              <h3 className="text-xl font-bold mb-2">🐠 Marine Life Tour</h3>
+              <p className="text-sm mb-4">Guided tour of ocean biodiversity with interactive info</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs bg-white/20 px-2 py-1 rounded">50+ Species</span>
+                <Play className="w-6 h-6" />
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-orange-600 to-red-600 p-6 rounded-xl cursor-pointer hover:scale-105 transition">
+              <h3 className="text-xl font-bold mb-2">🔬 NASA Data Journey</h3>
+              <p className="text-sm mb-4">Fly from space to sea viewing satellite data layers</p>
+              <div className="flex items-center justify-between">
+                <span className="text-xs bg-white/20 px-2 py-1 rounded">5 Data Layers</span>
+                <Play className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-800 rounded-xl p-6 mb-6">
+          <h2 className="text-xl font-bold mb-4">VR Features</h2>
+          <div className="space-y-3">
+            <div className="flex items-start">
+              <div className="bg-purple-600 rounded-full p-2 mr-3">
+                <Eye className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-bold">360° Immersive View</p>
+                <p className="text-sm opacity-70">Experience the ocean from every angle</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="bg-blue-600 rounded-full p-2 mr-3">
+                <Satellite className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-bold">NASA Data Overlays</p>
+                <p className="text-sm opacity-70">Toggle temperature, currents, and chlorophyll layers</p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="bg-green-600 rounded-full p-2 mr-3">
+                <Fish className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-bold">Interactive Marine Life</p>
+                <p className="text-sm opacity-70">Touch any creature to learn about it</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-6 text-center">
+          <h2 className="text-2xl font-bold mb-2">Accessible to Everyone</h2>
+          <p className="mb-4">Experience ocean diving without physical barriers. Perfect for people with disabilities, those afraid of water, or anyone curious about the ocean.</p>
+          <button className="bg-white text-purple-600 px-6 py-3 rounded-full font-bold hover:bg-purple-100 transition">
+            Start VR Experience
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMarineLife = () => (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-green-900 text-white pb-12">
+      <div className="bg-green-800 p-6 sticky top-0 z-20">
+        <button onClick={() => setCurrentPage('home')} className="flex items-center text-white hover:text-green-200">
+          <Home className="w-5 h-5 mr-2" />
+          Back to Home
+        </button>
+        <h1 className="text-3xl font-bold mt-4">Marine Life Database</h1>
+        <p className="text-sm opacity-80">Discover ocean species - tap any creature to learn more</p>
+      </div>
+
+      <div className="px-6 py-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {marineLife.map((creature) => (
+            <div
+              key={creature.id}
+              onClick={() => setSelectedFish(creature)}
+              className="bg-slate-800 rounded-xl p-6 cursor-pointer hover:scale-105 hover:bg-slate-700 transition transform"
+            >
+              <div className="text-6xl mb-4 text-center">{creature.emoji}</div>
+              <h3 className="text-2xl font-bold mb-1 text-center">{creature.name}</h3>
+              <p className="text-sm opacity-70 text-center italic mb-3">{creature.scientificName}</p>
+              <div className="flex justify-center">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  creature.status === 'Critical' || creature.status === 'Endangered' ? 'bg-red-600' :
+                  creature.status === 'Stable' ? 'bg-green-600' : 'bg-blue-600'
+                }`}>
+                  {creature.status}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {selectedFish && (
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center p-4 z-50 overflow-y-auto" onClick={() => setSelectedFish(null)}>
+            <div className="bg-slate-800 rounded-xl p-8 max-w-3xl w-full my-8" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center">
+                  <div className="text-7xl mr-4">{selectedFish.emoji}</div>
+                  <div>
+                    <h2 className="text-3xl font-bold">{selectedFish.name}</h2>
+                    <p className="text-lg opacity-70 italic">{selectedFish.scientificName}</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold mt-2 ${
+                      selectedFish.status === 'Critical' || selectedFish.status === 'Endangered' ? 'bg-red-600' :
+                      selectedFish.status === 'Stable' ? 'bg-green-600' : 'bg-blue-600'
+                    }`}>
+                      {selectedFish.status}
+                    </span>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedFish(null)} className="text-white hover:text-red-400">
+                  <X className="w-8 h-8" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-slate-700 p-4 rounded-lg">
+                  <p className="text-sm opacity-70 mb-1">Population Status</p>
+                  <p className="font-bold text-lg">{selectedFish.population}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg">
+                  <p className="text-sm opacity-70 mb-1">Typical Depth</p>
+                  <p className="font-bold text-lg">{selectedFish.depth}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg">
+                  <p className="text-sm opacity-70 mb-1">Water Temperature</p>
+                  <p className="font-bold text-lg">{selectedFish.temperature}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg">
+                  <p className="text-sm opacity-70 mb-1">Diet</p>
+                  <p className="font-bold text-lg">{selectedFish.diet}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg">
+                  <p className="text-sm opacity-70 mb-1">Lifespan</p>
+                  <p className="font-bold text-lg">{selectedFish.lifespan}</p>
+                </div>
+                <div className="bg-slate-700 p-4 rounded-lg">
+                  <p className="text-sm opacity-70 mb-1">Conservation Status</p>
+                  <p className="font-bold text-lg">{selectedFish.status}</p>
+                </div>
+              </div>
+
+              <div className="bg-red-900/30 p-4 rounded-lg mb-4">
+                <p className="text-sm opacity-70 mb-1">Threats</p>
+                <p className="font-bold">{selectedFish.threats}</p>
+              </div>
+
+              <div className="bg-blue-900/30 p-4 rounded-lg mb-4">
+                <p className="text-sm opacity-70 mb-1">Fun Fact</p>
+                <p className="font-bold">{selectedFish.funFact}</p>
+              </div>
+
+              <div className="flex gap-3">
+                <button className="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-lg font-bold transition">
+                  View in VR
+                </button>
+                <button className="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded-lg font-bold transition">
+                  Track with Aquarox
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="font-sans">
+      {currentPage === 'home' && renderHome()}
+      {currentPage === 'nasa-data' && renderNASAData()}
+      {currentPage === 'rescue' && renderRescueMissions()}
+      {currentPage === 'vr' && renderVRExploration()}
+      {currentPage === 'marine-life' && renderMarineLife()}
     </div>
   );
 };
