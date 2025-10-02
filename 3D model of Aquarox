@@ -1,0 +1,561 @@
+import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
+
+const CameraRover3D = () => {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x1a2332);
+    scene.fog = new THREE.Fog(0x1a2332, 20, 50);
+    
+    // Camera setup
+    const camera = new THREE.PerspectiveCamera(
+      35,
+      containerRef.current.clientWidth / containerRef.current.clientHeight,
+      0.1,
+      1000
+    );
+    camera.position.set(10, 5, 14);
+    camera.lookAt(0, 0, 0);
+
+    // Renderer setup
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    containerRef.current.appendChild(renderer.domElement);
+
+    // Lighting setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    mainLight.position.set(10, 15, 10);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 4096;
+    mainLight.shadow.mapSize.height = 4096;
+    scene.add(mainLight);
+
+    const fillLight = new THREE.DirectionalLight(0x4da6ff, 0.5);
+    fillLight.position.set(-8, 8, -5);
+    scene.add(fillLight);
+
+    const blueAccent = new THREE.PointLight(0x0088ff, 1.5);
+    blueAccent.position.set(0, 3, -8);
+    scene.add(blueAccent);
+
+    // Materials
+    const blackPlasticMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0a0a,
+      roughness: 0.25,
+      metalness: 0.05
+    });
+
+    const limeGreenMat = new THREE.MeshStandardMaterial({
+      color: 0xc8ff00,
+      roughness: 0.35,
+      metalness: 0.05
+    });
+
+    const darkRedMat = new THREE.MeshStandardMaterial({
+      color: 0xcc3333,
+      roughness: 0.5,
+      metalness: 0.02
+    });
+
+    const glassHousingMat = new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      roughness: 0.05,
+      metalness: 0.0,
+      transparent: true,
+      opacity: 0.15,
+      transmission: 0.9,
+      thickness: 0.5,
+      ior: 1.5
+    });
+
+    const screwMat = new THREE.MeshStandardMaterial({
+      color: 0x888888,
+      roughness: 0.3,
+      metalness: 0.9
+    });
+
+    // Ground
+    const groundGeo = new THREE.PlaneGeometry(50, 50);
+    const groundMat = new THREE.MeshStandardMaterial({ 
+      color: 0x0d1821,
+      roughness: 0.9,
+      metalness: 0.1
+    });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -1;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const gridHelper = new THREE.GridHelper(50, 50, 0x00a8ff, 0x004466);
+    gridHelper.position.y = -0.99;
+    scene.add(gridHelper);
+
+    // Rover group
+    const rover = new THREE.Group();
+
+    // Main chassis - two-tier box design
+    const lowerChassisGeo = new THREE.BoxGeometry(4.0, 0.6, 1.5);
+    const lowerChassis = new THREE.Mesh(lowerChassisGeo, blackPlasticMat);
+    lowerChassis.position.y = 0.3;
+    lowerChassis.castShadow = true;
+    rover.add(lowerChassis);
+
+    const upperChassisGeo = new THREE.BoxGeometry(3.8, 0.3, 1.3);
+    const upperChassis = new THREE.Mesh(upperChassisGeo, new THREE.MeshStandardMaterial({
+      color: 0x1a1a1a,
+      roughness: 0.3,
+      metalness: 0.1
+    }));
+    upperChassis.position.y = 0.75;
+    upperChassis.castShadow = true;
+    rover.add(upperChassis);
+
+    // Corner screws on top
+    const screwGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.03, 16);
+    const screwPositions = [
+      [1.7, 0.92, 0.55],
+      [1.7, 0.92, -0.55],
+      [-1.7, 0.92, 0.55],
+      [-1.7, 0.92, -0.55]
+    ];
+    screwPositions.forEach(pos => {
+      const screw = new THREE.Mesh(screwGeo, screwMat);
+      screw.position.set(...pos);
+      rover.add(screw);
+    });
+
+    // Create motor assembly with wheel
+    const createMotorAssembly = (side) => {
+      const assembly = new THREE.Group();
+      const xPos = side === 'left' ? -2.3 : 2.3;
+
+      // Motor housing (lime green cylinder)
+      const housingGeo = new THREE.CylinderGeometry(0.7, 0.7, 0.6, 32);
+      const housing = new THREE.Mesh(housingGeo, limeGreenMat);
+      housing.rotation.z = Math.PI / 2;
+      housing.position.set(xPos, 0, 0);
+      housing.castShadow = true;
+      assembly.add(housing);
+
+      // Cutout slots (4 rectangular openings)
+      for (let i = 0; i < 4; i++) {
+        const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        const cutout = new THREE.Mesh(
+          new THREE.BoxGeometry(0.2, 0.7, 0.5),
+          new THREE.MeshStandardMaterial({
+            color: 0x000000,
+            roughness: 0.8
+          })
+        );
+        cutout.position.set(
+          xPos,
+          Math.cos(angle) * 0.6,
+          Math.sin(angle) * 0.6
+        );
+        cutout.rotation.z = Math.PI / 2;
+        cutout.rotation.x = angle;
+        assembly.add(cutout);
+      }
+
+      // Wheel rim (lime green)
+      const wheelGeo = new THREE.CylinderGeometry(0.75, 0.75, 0.4, 32);
+      const wheel = new THREE.Mesh(wheelGeo, limeGreenMat);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.position.set(xPos, 0, 0);
+      wheel.castShadow = true;
+      assembly.add(wheel);
+
+      // Propeller hub (dark red center) - just the center hub, no blades
+      const propHubGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.15, 16);
+      const propHub = new THREE.Mesh(propHubGeo, darkRedMat);
+      propHub.rotation.z = Math.PI / 2;
+      propHub.position.set(xPos, 0, 0);
+      assembly.add(propHub);
+
+      // Connection bracket
+      const bracketGeo = new THREE.BoxGeometry(0.5, 0.7, 0.4);
+      const bracket = new THREE.Mesh(bracketGeo, limeGreenMat);
+      bracket.position.set(xPos * 0.65, 0.25, 0);
+      bracket.castShadow = true;
+      assembly.add(bracket);
+
+      return assembly;
+    };
+
+    const leftMotor = createMotorAssembly('left');
+    const rightMotor = createMotorAssembly('right');
+    rover.add(leftMotor);
+    rover.add(rightMotor);
+
+    // Camera mount and housing
+    const cameraGroup = new THREE.Group();
+    cameraGroup.position.set(0, 1.4, 0);
+
+    // Mount base (black)
+    const mountBaseGeo = new THREE.CylinderGeometry(0.2, 0.25, 0.4, 16);
+    const mountBase = new THREE.Mesh(mountBaseGeo, blackPlasticMat);
+    mountBase.position.y = -0.6;
+    mountBase.castShadow = true;
+    cameraGroup.add(mountBase);
+
+    // Mount connector pieces
+    const connector1Geo = new THREE.BoxGeometry(0.3, 0.15, 0.3);
+    const connector1 = new THREE.Mesh(connector1Geo, blackPlasticMat);
+    connector1.position.y = -0.35;
+    connector1.castShadow = true;
+    cameraGroup.add(connector1);
+
+    const connector2Geo = new THREE.BoxGeometry(0.25, 0.2, 0.25);
+    const connector2 = new THREE.Mesh(connector2Geo, blackPlasticMat);
+    connector2.position.y = -0.2;
+    connector2.castShadow = true;
+    cameraGroup.add(connector2);
+
+    // Clear waterproof housing (square with rounded edges)
+    const housingGeo = new THREE.BoxGeometry(0.95, 0.75, 0.75);
+    const housing = new THREE.Mesh(housingGeo, glassHousingMat);
+    housing.castShadow = true;
+    cameraGroup.add(housing);
+
+    // Housing frame edges
+    const housingEdges = new THREE.EdgesGeometry(housingGeo);
+    const housingLine = new THREE.LineSegments(
+      housingEdges,
+      new THREE.LineBasicMaterial({ color: 0x666666, linewidth: 2 })
+    );
+    cameraGroup.add(housingLine);
+
+    // Camera body (dark gray/black)
+    const cameraBodyGeo = new THREE.BoxGeometry(0.75, 0.6, 0.6);
+    const cameraBody = new THREE.Mesh(cameraBodyGeo, new THREE.MeshStandardMaterial({
+      color: 0x1a1a1a,
+      roughness: 0.3,
+      metalness: 0.2
+    }));
+    cameraBody.castShadow = true;
+    cameraGroup.add(cameraBody);
+
+    // Large lens housing on front
+    const lensHousingGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 32);
+    const lensHousing = new THREE.Mesh(lensHousingGeo, new THREE.MeshStandardMaterial({
+      color: 0x0a0a0a,
+      roughness: 0.2,
+      metalness: 0.8
+    }));
+    lensHousing.rotation.x = Math.PI / 2;
+    lensHousing.position.set(0, 0, 0.4);
+    lensHousing.castShadow = true;
+    cameraGroup.add(lensHousing);
+
+    // Lens glass (dark with rings)
+    const lensGlassGeo = new THREE.CircleGeometry(0.26, 32);
+    const lensGlass = new THREE.Mesh(lensGlassGeo, new THREE.MeshStandardMaterial({
+      color: 0x0a0a0a,
+      roughness: 0.05,
+      metalness: 0.95
+    }));
+    lensGlass.position.set(0, 0, 0.51);
+    cameraGroup.add(lensGlass);
+
+    // Lens rings
+    const ring1Geo = new THREE.TorusGeometry(0.22, 0.015, 16, 32);
+    const ring1 = new THREE.Mesh(ring1Geo, new THREE.MeshStandardMaterial({
+      color: 0x333333,
+      roughness: 0.3,
+      metalness: 0.7
+    }));
+    ring1.position.set(0, 0, 0.5);
+    cameraGroup.add(ring1);
+
+    const ring2Geo = new THREE.TorusGeometry(0.15, 0.012, 16, 32);
+    const ring2 = new THREE.Mesh(ring2Geo, new THREE.MeshStandardMaterial({
+      color: 0x444444,
+      roughness: 0.3,
+      metalness: 0.7
+    }));
+    ring2.position.set(0, 0, 0.49);
+    cameraGroup.add(ring2);
+
+    // Top mounting clip
+    const clipGeo = new THREE.BoxGeometry(0.4, 0.15, 0.25);
+    const clip = new THREE.Mesh(clipGeo, blackPlasticMat);
+    clip.position.set(0, 0.45, -0.1);
+    clip.castShadow = true;
+    cameraGroup.add(clip);
+
+    rover.add(cameraGroup);
+
+    // Bottom thrusters (2 underneath) - clearly visible
+    const thrusterMat = new THREE.MeshStandardMaterial({
+      color: 0x505050,
+      roughness: 0.3,
+      metalness: 0.7
+    });
+
+    const thrusterNozzleMat = new THREE.MeshStandardMaterial({
+      color: 0x88ccff,
+      emissive: 0x4488ff,
+      emissiveIntensity: 0.5,
+      roughness: 0.2,
+      metalness: 0.8
+    });
+
+    // Bottom left thruster - extends down from chassis
+    const bottomThrusterGeo = new THREE.CylinderGeometry(0.2, 0.24, 0.9, 16);
+    const bottomLeft = new THREE.Mesh(bottomThrusterGeo, thrusterMat);
+    bottomLeft.position.set(-1.0, -0.4, 0);
+    bottomLeft.castShadow = true;
+    rover.add(bottomLeft);
+
+    // Bottom left mounting bracket (connects to chassis bottom)
+    const bottomLeftBracket = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.2, 0.3),
+      blackPlasticMat
+    );
+    bottomLeftBracket.position.set(-1.0, 0.05, 0);
+    bottomLeftBracket.castShadow = true;
+    rover.add(bottomLeftBracket);
+
+    // Bottom left nozzle with glow
+    const bottomLeftNozzle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.16, 0.21, 0.15, 16),
+      thrusterNozzleMat
+    );
+    bottomLeftNozzle.position.set(-1.0, -0.9, 0);
+    rover.add(bottomLeftNozzle);
+
+    // Bottom left guard ring
+    const guardRingLeft = new THREE.Mesh(
+      new THREE.TorusGeometry(0.22, 0.03, 8, 16),
+      thrusterMat
+    );
+    guardRingLeft.rotation.x = Math.PI / 2;
+    guardRingLeft.position.set(-1.0, -0.6, 0);
+    rover.add(guardRingLeft);
+
+    // Bottom right thruster - extends down from chassis
+    const bottomRight = new THREE.Mesh(bottomThrusterGeo, thrusterMat);
+    bottomRight.position.set(1.0, -0.4, 0);
+    bottomRight.castShadow = true;
+    rover.add(bottomRight);
+
+    // Bottom right mounting bracket (connects to chassis bottom)
+    const bottomRightBracket = new THREE.Mesh(
+      new THREE.BoxGeometry(0.3, 0.2, 0.3),
+      blackPlasticMat
+    );
+    bottomRightBracket.position.set(1.0, 0.05, 0);
+    bottomRightBracket.castShadow = true;
+    rover.add(bottomRightBracket);
+
+    // Bottom right nozzle with glow
+    const bottomRightNozzle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.16, 0.21, 0.15, 16),
+      thrusterNozzleMat
+    );
+    bottomRightNozzle.position.set(1.0, -0.9, 0);
+    rover.add(bottomRightNozzle);
+
+    // Bottom right guard ring
+    const guardRingRight = new THREE.Mesh(
+      new THREE.TorusGeometry(0.22, 0.03, 8, 16),
+      thrusterMat
+    );
+    guardRingRight.rotation.x = Math.PI / 2;
+    guardRingRight.position.set(1.0, -0.6, 0);
+    rover.add(guardRingRight);
+
+    // Side thrusters
+    const sideThrusterGeo = new THREE.CylinderGeometry(0.14, 0.18, 0.5, 16);
+    
+    const leftThruster = new THREE.Mesh(sideThrusterGeo, thrusterMat);
+    leftThruster.rotation.z = Math.PI / 2;
+    leftThruster.position.set(-1.7, 0.2, -0.5);
+    leftThruster.castShadow = true;
+    rover.add(leftThruster);
+
+    const leftThrusterNozzle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.11, 0.15, 0.1, 16),
+      thrusterNozzleMat
+    );
+    leftThrusterNozzle.rotation.z = Math.PI / 2;
+    leftThrusterNozzle.position.set(-1.95, 0.2, -0.5);
+    rover.add(leftThrusterNozzle);
+
+    const rightThruster = new THREE.Mesh(sideThrusterGeo, thrusterMat);
+    rightThruster.rotation.z = -Math.PI / 2;
+    rightThruster.position.set(1.7, 0.2, -0.5);
+    rightThruster.castShadow = true;
+    rover.add(rightThruster);
+
+    const rightThrusterNozzle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.11, 0.15, 0.1, 16),
+      thrusterNozzleMat
+    );
+    rightThrusterNozzle.rotation.z = -Math.PI / 2;
+    rightThrusterNozzle.position.set(1.95, 0.2, -0.5);
+    rover.add(rightThrusterNozzle);
+
+    scene.add(rover);
+    rover.position.y = 1;
+
+    // Animation
+    let time = 0;
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    let rotation = { x: 0, y: 0 };
+
+    const animate = () => {
+      requestAnimationFrame(animate);
+      time += 0.01;
+
+      if (!isDragging) {
+        rover.rotation.y += 0.003;
+      }
+
+      // Rotate propellers
+      leftMotor.children.forEach((child, i) => {
+        if (i >= 4 && i <= 6) {
+          child.rotation.x = time * 3;
+        }
+      });
+      rightMotor.children.forEach((child, i) => {
+        if (i >= 4 && i <= 6) {
+          child.rotation.x = time * 3;
+        }
+      });
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // Mouse controls
+    const onMouseDown = (e) => {
+      isDragging = true;
+      previousMousePosition = { x: e.clientX, y: e.clientY };
+    };
+
+    const onMouseMove = (e) => {
+      if (isDragging) {
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
+
+        rotation.y += deltaX * 0.005;
+        rotation.x += deltaY * 0.005;
+
+        rover.rotation.y = rotation.y;
+        rover.rotation.x = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, rotation.x));
+
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      }
+    };
+
+    const onMouseUp = () => {
+      isDragging = false;
+    };
+
+    const onWheel = (e) => {
+      e.preventDefault();
+      const delta = e.deltaY * 0.01;
+      camera.position.z = Math.max(8, Math.min(25, camera.position.z + delta));
+      camera.position.x = camera.position.z * 0.71;
+      camera.position.y = camera.position.z * 0.36;
+      camera.lookAt(0, 0, 0);
+    };
+
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    };
+
+    window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('resize', handleResize);
+      containerRef.current?.removeChild(renderer.domElement);
+      renderer.dispose();
+    };
+  }, []);
+
+  return (
+    <div className="w-full h-screen bg-slate-900 flex flex-col items-center justify-center">
+      <div ref={containerRef} className="w-full h-full" />
+      
+      <div className="absolute top-6 left-6 text-cyan-400 bg-slate-900 bg-opacity-90 border border-cyan-500 px-4 py-3 rounded-lg shadow-xl text-xs max-w-xs">
+        <h2 className="text-lg font-bold mb-2 text-cyan-300">AQUAROX ROVER</h2>
+        <div className="space-y-1">
+          <div className="flex justify-between">
+            <span className="text-cyan-500">Model:</span>
+            <span className="text-white">AQX-CR-001</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-cyan-500">Propulsion:</span>
+            <span className="text-white">4x Thruster</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-cyan-500">Camera:</span>
+            <span className="text-white">Action Cam</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-cyan-500">Dimensions:</span>
+            <span className="text-white">380x140x180mm</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute top-6 right-6 text-cyan-400 bg-slate-900 bg-opacity-90 border border-cyan-500 px-4 py-3 rounded-lg shadow-xl text-xs">
+        <h3 className="text-sm font-bold mb-2 text-cyan-300">FEATURES</h3>
+        <ul className="space-y-1">
+          <li className="flex items-start">
+            <span className="text-green-400 mr-2">✓</span>
+            <span className="text-white">Waterproof Housing</span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-green-400 mr-2">✓</span>
+            <span className="text-white">6DOF Control</span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-green-400 mr-2">✓</span>
+            <span className="text-white">High-Torque Motors</span>
+          </li>
+          <li className="flex items-start">
+            <span className="text-green-400 mr-2">✓</span>
+            <span className="text-white">Modular Design</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div className="absolute bottom-8 text-cyan-400 text-center bg-slate-900 bg-opacity-80 border border-cyan-500 px-6 py-3 rounded-lg shadow-xl">
+        <p className="text-lg font-bold mb-1">Camera Rover 3D Model</p>
+        <p className="text-xs opacity-90">Drag to rotate • Scroll to zoom</p>
+      </div>
+    </div>
+  );
+};
+
+export default CameraRover3D;
